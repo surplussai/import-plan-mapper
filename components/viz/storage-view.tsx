@@ -1,30 +1,56 @@
-const IMPORT_RECORD: [string, string][] = [
-  ["Import", "September stock upload"],
-  ["Source header", "PTR → normalized “ptr”"],
-  ["Suggested · final", "offerPrice · offerPrice"],
-  ["Decision", "user confirmed"],
-  ["Confidence", "useful"],
-  ["Evidence", "alias + price profile + MRP relationship"],
+const RECORDS = [
+  {
+    title: "This import record",
+    sub: "Used for audit and replay",
+    rows: [
+      ["Header", "PTR"],
+      ["Suggested", "offerPrice"],
+      ["Final", "offerPrice"],
+      ["Evidence", "alias + profile + relation"],
+    ],
+  },
+  {
+    title: "Seller/template memory",
+    sub: "Used on this seller's next upload",
+    rows: [
+      ["Seller", "ABC Distributors"],
+      ["Header", "ptr"],
+      ["Confirmed", "offerPrice"],
+      ["Rejected", "mrp"],
+    ],
+  },
+  {
+    title: "Global memory",
+    sub: "Used for new sellers",
+    rows: [
+      ["Header", "ptr"],
+      ["offerPrice", "82 confirmed"],
+      ["purchasePrice", "7 confirmed"],
+      ["mrp", "2 confirmed"],
+    ],
+  },
+  {
+    title: "Semantic memory",
+    sub: "Used for embedding search",
+    rows: [
+      ["Description", "PTR, price-like, beside MRP"],
+      ["Confirmed", "offerPrice"],
+      ["Vector", "stored embedding"],
+      ["Scope", "committed examples only"],
+    ],
+  },
 ];
 
-const KNOWLEDGE_RECORD: [string, string][] = [
-  ["Seller", "ABC Distributors"],
-  ["Header", "ptr → offerPrice"],
-  ["Confirmations · rejections", "3 · 0"],
-  ["Also stored", "ptr → MRP was rejected"],
-  ["Trust", "confirmed"],
-];
-
-function Record({ title, sub, rows, accent }: { title: string; sub: string; rows: [string, string][]; accent: string }) {
+function RecordCard({ title, sub, rows }: { title: string; sub: string; rows: [string, string][] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-line">
-      <div className={`border-b border-line px-3 py-2 ${accent}`}>
+    <div className="overflow-hidden rounded-lg border border-line bg-canvas">
+      <div className="border-b border-line bg-strong px-3 py-2">
         <div className="text-[12.5px] font-semibold text-ink">{title}</div>
         <div className="text-[11.5px] text-ink-2">{sub}</div>
       </div>
       <dl className="divide-y divide-line bg-elevated">
         {rows.map(([k, v]) => (
-          <div key={k} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-2 px-3 py-1.5 text-[12px]">
+          <div key={k} className="grid grid-cols-[5.5rem_1fr] gap-2 px-3 py-1.5 text-[12px]">
             <dt className="text-ink-3">{k}</dt>
             <dd className="text-ink">{v}</dd>
           </div>
@@ -36,10 +62,11 @@ function Record({ title, sub, rows, accent }: { title: string; sub: string; rows
 
 export function StorageView() {
   return (
-    <div className="flex flex-col gap-2.5">
-      <Record title="This import" sub="What happened on this upload — for audit, replay and explaining decisions" rows={IMPORT_RECORD} accent="bg-strong" />
-      <Record title="Seller memory" sub="What we have learned about this seller over time — reused on the next upload" rows={KNOWLEDGE_RECORD} accent="bg-teal/10" />
-      <p className="text-[12px] leading-snug text-ink-3">Rejected choices are stored too — otherwise the engine would keep suggesting the same wrong option.</p>
+    <div className="grid gap-3">
+      {RECORDS.map((r) => (
+        <RecordCard key={r.title} title={r.title} sub={r.sub} rows={r.rows as [string, string][]} />
+      ))}
+      <p className="text-[12px] leading-snug text-ink-3">Rejected choices are stored too, so the engine does not keep asking the same wrong question.</p>
     </div>
   );
 }

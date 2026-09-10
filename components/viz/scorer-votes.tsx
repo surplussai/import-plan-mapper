@@ -5,15 +5,13 @@ import { motion } from "framer-motion";
 const CANDIDATES = [
   {
     field: "Offer price",
-    total: 10,
+    total: 9,
     tone: "text-teal",
     votes: [
-      ["Known alias", 4],
-      ["Seller memory", 0],
-      ["Values look like a price", 2],
-      ["Lower than MRP", 2],
-      ["Meaning similarity", 1],
-      ["Model suggestion", 1],
+      ["Layer 2 alias: PTR means Offer price", 4],
+      ["Layer 5 profile: values look like prices", 2],
+      ["Resolver clue: PTR is lower than MRP", 2],
+      ["Layer 3 semantic history: similar past columns", 1],
     ],
   },
   {
@@ -21,27 +19,32 @@ const CANDIDATES = [
     total: 3,
     tone: "text-saffron",
     votes: [
-      ["Known alias", 0],
-      ["Values look like a price", 2],
-      ["Meaning similarity", 1],
+      ["Layer 5 profile: values look like prices", 2],
+      ["Layer 3 semantic history: weak similarity", 1],
     ],
   },
   {
     field: "MRP",
-    total: -3,
+    total: -2,
     tone: "text-ink-3",
     votes: [
-      ["Values look like a price", 2],
-      ["Another column is already MRP", -5],
+      ["Layer 5 profile: values look like prices", 2],
+      ["Resolver clue: another column is clearly MRP", -4],
     ],
   },
 ] as const;
 
+const maxScore = Math.max(...CANDIDATES.map((c) => Math.max(c.total, 0)));
+
 export function ScorerVotes() {
   return (
     <div className="rounded-lg border border-line bg-canvas p-3.5">
-      <div className="text-[11.5px] font-medium text-ink-3">Weighted votes for “PTR” — illustrative, not real units</div>
-      <div className="mt-2.5 flex flex-col gap-2">
+      <div>
+        <div className="text-[11.5px] font-medium text-ink-3">Worked example</div>
+        <div className="mt-1 font-mono text-[13px] font-semibold text-ink">PTR</div>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3">
         {CANDIDATES.map((c, i) => (
           <motion.div
             key={c.field}
@@ -51,10 +54,13 @@ export function ScorerVotes() {
             className="rounded-md border border-line bg-elevated px-3 py-2"
           >
             <div className="flex items-baseline justify-between">
-              <span className="text-[13px] font-semibold text-ink">PTR → {c.field}</span>
+              <span className="text-[13px] font-semibold text-ink">{c.field}</span>
               <span className={`font-mono text-[13px] font-semibold ${c.tone}`}>{c.total > 0 ? `+${c.total}` : c.total}</span>
             </div>
-            <ul className="mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 text-[11.5px]">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-strong">
+              <div className={`h-full rounded-full ${c.total >= 8 ? "bg-teal" : c.total > 0 ? "bg-saffron" : "bg-[#b23b4b]"}`} style={{ width: `${c.total > 0 ? (c.total / maxScore) * 100 : 28}%` }} />
+            </div>
+            <ul className="mt-2 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[11.5px]">
               {c.votes.map(([name, v]) => (
                 <li key={name} className="contents">
                   <span className="text-ink-2">{name}</span>
@@ -65,7 +71,19 @@ export function ScorerVotes() {
           </motion.div>
         ))}
       </div>
-      <p className="mt-2 text-[12px] text-ink-3">Ranked: Offer price, then Purchase price, then MRP.</p>
+
+      <div className="mt-3 rounded-md border border-teal/30 bg-teal/8 px-3 py-2.5">
+        <div className="text-[11.5px] font-medium text-teal">Result</div>
+        <div className="mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 text-[12px]">
+          <span className="text-ink-2">Winner</span>
+          <span className="font-semibold text-ink">Offer price</span>
+          <span className="text-ink-2">Score</span>
+          <span className="font-mono font-semibold text-teal">+9</span>
+          <span className="text-ink-2">Margin</span>
+          <span className="font-mono font-semibold text-teal">+6</span>
+        </div>
+        <p className="mt-2 text-[11.5px] leading-snug text-ink-2">This is a strong candidate. The confidence gate still checks blockers before auto-mapping.</p>
+      </div>
     </div>
   );
 }

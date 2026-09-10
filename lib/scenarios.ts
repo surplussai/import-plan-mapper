@@ -23,7 +23,7 @@ export const SCENARIOS: Scenario[] = [
     title: "Returning supplier",
     column: "AV STK",
     path: ["input", "l0", "l1", "l3", "l5", "scorer", "resolver", "gate", "auto", "remember", "output"],
-    steps: ["This seller previously confirmed Available quantity — seller history wins over everything else", "Values are whole numbers", "No conflict", "Auto-mapped"],
+    steps: ["This seller previously confirmed Available quantity, so seller history wins", "Values are whole numbers", "No conflict", "Auto-mapped"],
     message: "The engine remembers the supplier’s language, so repeat imports become easier.",
   },
   {
@@ -36,7 +36,7 @@ export const SCENARIOS: Scenario[] = [
       "Values show it is a price",
       "MRP exists beside it, and MRP values are higher",
       "Offer price becomes the strongest candidate",
-      "First time seen — not enough for auto-mapping",
+      "First time seen, so not enough for auto-mapping",
       "One question is asked; after confirmation, PTR → Offer price is stored for this seller",
     ],
     message: "The engine collects enough evidence to ask a useful question instead of guessing.",

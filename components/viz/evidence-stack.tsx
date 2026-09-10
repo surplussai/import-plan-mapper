@@ -1,81 +1,46 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
 
-const CLUES = [
-  { text: "Header says “Rate”", chip: "Header meaning" },
-  { text: "Values look like currency", chip: "Values underneath" },
-  { text: "Nearby column is “MRP”", chip: "Nearby columns" },
+const SIGNALS = [
+  { signal: "Price-like", check: "145, 220, 88", supports: "Offer price or MRP", score: "+2", tone: "text-teal" },
+  { signal: "Percentage-like", check: "5, 12, 18", supports: "GST rate", score: "+2", tone: "text-teal" },
+  { signal: "Identifier-like", check: "8901030895484", supports: "EAN or SKU", score: "+2", tone: "text-teal" },
+  { signal: "Wrong type", check: "₹145 for Expiry date", supports: "Block candidate", score: "-4", tone: "text-[#b23b4b]" },
 ];
-const STATES = ["Weak", "Useful", "Strong"] as const;
-const STEP = 0.75;
 
 export function EvidenceStack() {
   return (
     <div className="rounded-lg border border-line bg-canvas p-3.5">
-      <div className="text-[11.5px] font-medium text-ink-3">How the clues work together</div>
+      <div className="text-[11.5px] font-medium text-ink-3">Layer 5 output</div>
+      <div className="mt-1 text-[12.5px] font-semibold text-ink">Value profile becomes evidence</div>
 
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        {CLUES.map((c, i) => (
-          <motion.span
-            key={c.chip}
-            initial={{ opacity: 0.25 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * STEP + 0.2, duration: 0.3 }}
-            className="rounded-full border border-teal/30 bg-teal/10 px-2.5 py-0.5 text-[11.5px] text-teal"
-          >
-            {c.chip}
-          </motion.span>
-        ))}
-      </div>
-
-      <ol className="mt-3 flex flex-col gap-1.5">
-        {CLUES.map((c, i) => (
-          <motion.li
-            key={c.text}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * STEP + 0.2, duration: 0.35, ease: "easeOut" }}
-            className="flex items-center gap-2.5 rounded-md border border-line bg-elevated px-3 py-2 text-[13px] text-ink"
-          >
-            <span className="text-[11px] text-ink-3">{i + 1}</span>
-            {c.text}
-          </motion.li>
-        ))}
-      </ol>
-
-      <div className="mt-3 flex items-center gap-2 text-[11.5px] font-medium text-ink-3">
-        <ArrowDown className="h-3.5 w-3.5" />
-        Combined confidence
-      </div>
-      <div className="mt-2 grid grid-cols-3 gap-1.5">
-        {STATES.map((s, i) => (
+      <div className="mt-3 grid gap-2">
+        {SIGNALS.map((s, i) => (
           <motion.div
-            key={s}
-            initial={{ opacity: 0.3 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * STEP + 0.45, duration: 0.3 }}
-            className={`rounded-md border px-2 py-1.5 text-center text-[12px] font-medium ${
-              i === 2 ? "border-teal/50 bg-teal/12 text-teal" : i === 1 ? "border-saffron/40 bg-saffron/10 text-saffron" : "border-line bg-strong text-ink-3"
-            }`}
+            key={s.signal}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.12, duration: 0.28 }}
+            className="rounded-md border border-line bg-elevated px-3 py-2"
           >
-            {s}
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[12.5px] font-semibold text-ink">{s.signal}</span>
+              <span className={`font-mono text-[12px] font-semibold ${s.tone}`}>{s.score}</span>
+            </div>
+            <div className="mt-1 grid grid-cols-[5.25rem_1fr] gap-x-2 gap-y-1 text-[11.5px]">
+              <span className="text-ink-3">Example</span>
+              <span className="font-mono text-ink-2">{s.check}</span>
+              <span className="text-ink-3">Meaning</span>
+              <span className="text-ink-2">{s.supports}</span>
+            </div>
           </motion.div>
         ))}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 3 * STEP + 0.3, duration: 0.35 }}
-        className="mt-3 rounded-md border border-teal/30 bg-teal/10 px-3 py-2 text-[13px] font-medium text-ink"
-      >
-        Likely meaning: <span className="text-teal">Trade price</span>
-      </motion.div>
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 * STEP + 0.7, duration: 0.4 }} className="mt-2 text-[12.5px] text-ink-2">
-        The decision becomes stronger because the clues agree.
-      </motion.p>
+      <div className="mt-3 rounded-md border border-line bg-elevated px-3 py-2 text-[11.5px] leading-snug text-ink-2">
+        Layer 5 does not choose the final field. It only tells the scorer whether the values support or contradict each candidate.
+      </div>
     </div>
   );
 }

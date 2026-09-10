@@ -1,115 +1,79 @@
-const GLOBAL_PTR: [string, number][] = [
-  ["Offer price", 82],
-  ["Purchase price", 7],
-  ["MRP", 2],
-];
-const GLOBAL_RATE: [string, number][] = [
-  ["Offer price", 40],
-  ["Purchase price", 35],
-  ["MRP", 30],
-];
-const SIMILAR: [string, string, string][] = [
-  ["Dealer Price", "Offer price", "High"],
-  ["Retailer Rate", "Offer price", "High"],
-  ["Trade Price", "Offer price", "Medium"],
-  ["Landing Price", "Purchase price", "Medium"],
-];
-const STRENGTH: [string, string][] = [
-  ["1 of 1 confirmations", "weak — too little data"],
-  ["8 of 10", "useful"],
-  ["82 of 91", "strong"],
-  ["40 of 100", "ambiguous"],
-  ["5 confirmed, 10 rejected", "negative evidence"],
+const MEMORY = [
+  {
+    name: "Seller/template",
+    score: "+4",
+    when: "after Layer 1",
+    uses: "same seller or same template confirmed this header",
+    example: "ABC · PTR → Offer price · 4 confirmed",
+    tone: "text-teal",
+  },
+  {
+    name: "Global",
+    score: "+2",
+    when: "after Layer 1",
+    uses: "many suppliers confirmed the same header",
+    example: "ptr → Offer price in 82 of 91 imports",
+    tone: "text-saffron",
+  },
+  {
+    name: "Semantic",
+    score: "+1",
+    when: "after Layer 5",
+    uses: "similar confirmed columns found by embedding search",
+    example: "Dealer Price, Retailer Rate, Trade Price",
+    tone: "text-indigo",
+  },
 ];
 
-function Counts({ rows }: { rows: [string, number][] }) {
-  const total = rows.reduce((a, r) => a + r[1], 0);
-  return (
-    <div className="grid gap-1">
-      {rows.map(([f, n]) => (
-        <div key={f} className="grid grid-cols-[7rem_1fr_2rem] items-center gap-2 text-[11.5px]">
-          <span className="text-ink-2">{f}</span>
-          <span className="h-1.5 rounded-full bg-strong">
-            <span className="block h-full rounded-full bg-teal" style={{ width: `${(n / total) * 100}%` }} />
-          </span>
-          <span className="text-right font-mono text-ink-3">{n}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
+const FLOW = [
+  ["Layer 1", "normalize header"],
+  ["Exact memory", "seller and global lookup"],
+  ["Layer 5", "add value shape"],
+  ["Semantic memory", "embedding search"],
+  ["Scorer", "add points"],
+];
 
 export function HistoryView() {
   return (
-    <div className="grid gap-2.5">
-      <div className="rounded-lg border border-teal/30 bg-canvas p-3.5">
-        <div className="flex items-baseline justify-between">
-          <div className="text-[12.5px] font-semibold text-ink">1 · Seller history</div>
-          <span className="text-[11px] text-teal">trust: very high</span>
-        </div>
-        <p className="mt-1 text-[12px] text-ink-2">Has this exact seller used this exact header before?</p>
-        <div className="mt-2 rounded-md border border-line bg-elevated px-3 py-1.5 font-mono text-[11.5px] text-ink-2">
-          ABC Distributors · PTR → Offer price · confirmed 4 · rejected 0
+    <div className="grid gap-3">
+      <div className="rounded-lg border border-line bg-canvas p-3.5">
+        <div className="text-[11.5px] font-medium text-ink-3">Memory scorecard</div>
+        <div className="mt-2 grid gap-2">
+          {MEMORY.map((m) => (
+            <div key={m.name} className="rounded-md border border-line bg-elevated px-3 py-2">
+              <div className="grid grid-cols-[1fr_auto] items-baseline gap-2">
+                <span className="text-[12.5px] font-semibold text-ink">{m.name}</span>
+                <span className={`font-mono text-[12px] font-semibold ${m.tone}`}>{m.score}</span>
+              </div>
+              <div className="mt-1 grid grid-cols-[4.75rem_1fr] gap-x-2 gap-y-1 text-[11.5px] leading-snug">
+                <span className="text-ink-3">When</span>
+                <span className="text-ink-2">{m.when}</span>
+                <span className="text-ink-3">Uses</span>
+                <span className="text-ink-2">{m.uses}</span>
+                <span className="text-ink-3">Example</span>
+                <span className="font-mono text-ink-2">{m.example}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="rounded-lg border border-line bg-canvas p-3.5">
-        <div className="flex items-baseline justify-between">
-          <div className="text-[12.5px] font-semibold text-ink">2 · Global header history</div>
-          <span className="text-[11px] text-ink-3">trust: high when consistent</span>
-        </div>
-        <p className="mt-1 text-[12px] text-ink-2">Across all suppliers, what has this exact header usually meant?</p>
-        <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
-          <div className="rounded-md border border-line bg-elevated p-2.5">
-            <div className="mb-1.5 font-mono text-[11px] text-ink">ptr</div>
-            <Counts rows={GLOBAL_PTR} />
-            <div className="mt-1.5 text-[11px] text-teal">90% agree — strong evidence</div>
-          </div>
-          <div className="rounded-md border border-line bg-elevated p-2.5">
-            <div className="mb-1.5 font-mono text-[11px] text-ink">rate</div>
-            <Counts rows={GLOBAL_RATE} />
-            <div className="mt-1.5 text-[11px] text-saffron">mixed — cannot decide alone</div>
-          </div>
-        </div>
-        <div className="mt-2.5 overflow-hidden rounded-md border border-line bg-elevated">
-          {STRENGTH.map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[1fr_1fr] gap-2 border-b border-line px-2.5 py-1 text-[11.5px] last:border-b-0">
-              <span className="font-mono text-ink-2">{k}</span>
-              <span className="text-ink-2">{v}</span>
+        <div className="text-[11.5px] font-medium text-ink-3">Where it fits</div>
+        <div className="mt-2 grid gap-1.5">
+          {FLOW.map(([step, text], i) => (
+            <div key={step} className="grid grid-cols-[1.75rem_5.5rem_1fr] items-center gap-2 rounded-md border border-line bg-elevated px-2.5 py-1.5 text-[11.5px]">
+              <span className="font-mono text-ink-3">{i + 1}</span>
+              <span className="font-medium text-ink">{step}</span>
+              <span className="text-ink-2">{text}</span>
             </div>
           ))}
         </div>
-        <p className="mt-1.5 text-[11.5px] text-ink-3">Strength depends on how many examples, how many agree, how many were rejected, and how recently the pattern was seen.</p>
       </div>
 
-      <div className="rounded-lg border border-line bg-canvas p-3.5">
-        <div className="flex items-baseline justify-between">
-          <div className="text-[12.5px] font-semibold text-ink">3 · Semantic history search</div>
-          <span className="text-[11px] text-ink-3">trust: medium</span>
-        </div>
-        <p className="mt-1 text-[12px] text-ink-2">
-          Have we seen a different header with a similar meaning and similar context? Spelling won’t connect <span className="font-mono">Dealer Landing</span> to Offer
-          price, but confirmed examples with similar meaning can.
-        </p>
-        <div className="mt-2 overflow-hidden rounded-md border border-line bg-elevated">
-          <div className="grid grid-cols-[1fr_1fr_4rem] gap-2 border-b border-line bg-strong px-2.5 py-1 text-[11px] font-medium text-ink-2">
-            <span>Past header</span>
-            <span>Confirmed as</span>
-            <span>Similar</span>
-          </div>
-          {SIMILAR.map(([h, t, s]) => (
-            <div key={h} className="grid grid-cols-[1fr_1fr_4rem] gap-2 border-b border-line px-2.5 py-1 text-[11.5px] last:border-b-0">
-              <span className="font-mono text-ink-2">{h}</span>
-              <span className="text-ink">{t}</span>
-              <span className={s === "High" ? "text-teal" : "text-ink-3"}>{s}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-1.5 text-[11.5px] text-ink-3">Among the closest confirmed examples: Offer price 3, Purchase price 1. That becomes evidence — not an answer.</p>
-        <div className="mt-2.5 rounded-md border border-line bg-elevated px-3 py-2 text-[11.5px] text-ink-2">
-          <div className="text-[11px] font-medium text-ink-3">What we actually embed — a description, not just the header</div>
-          <div className="mt-1 font-mono leading-snug">Inventory spreadsheet column. Header PTR. Positive decimal currency values. Nearby columns MRP, GST and available stock.</div>
-        </div>
+      <div className="rounded-lg border border-teal/30 bg-teal/8 px-3 py-2.5">
+        <div className="text-[11.5px] font-medium text-teal">Simple explanation</div>
+        <p className="mt-1 text-[12px] leading-snug text-ink-2">Exact memory remembers headers. Semantic memory remembers meaning. Both become scorer evidence, not final decisions.</p>
       </div>
     </div>
   );

@@ -48,7 +48,7 @@ export interface NodeContent {
 export const NODES: NodeContent[] = [
   { id: "input", kind: "input", tone: "neutral", label: "Input", title: "Supplier workbook", summary: "A spreadsheet arrives in the **supplier’s own format**.", icon: "file" },
   { id: "l0", kind: "layer", tone: "auto", label: "Layer 0", title: "Read the file and locate the table", summary: "Find the right sheet, the **real header row** and where product rows begin.", icon: "scan" },
-  { id: "l1", kind: "layer", tone: "auto", label: "Layer 1", title: "Normalize the header", summary: "Clean the text so labels become **comparable** — without deciding meaning.", icon: "case" },
+  { id: "l1", kind: "layer", tone: "auto", label: "Layer 1", title: "Normalize the header", summary: "Clean the text so labels become **comparable** before meaning is decided.", icon: "case" },
   { id: "l2", kind: "layer", tone: "auto", label: "Layer 2", title: "Known aliases", summary: "Check the header against the **field registry** of known names.", icon: "book" },
   { id: "l3", kind: "layer", tone: "auto", label: "Layer 3", title: "Confirmed history", summary: "What **this seller** confirmed, what **all suppliers** confirmed, and similar past columns.", icon: "history" },
   { id: "l4", kind: "layer", tone: "auto", label: "Layer 4", title: "Fuzzy matching", summary: "Catch **typos and near-misses** in the wording.", icon: "spell" },
@@ -56,9 +56,9 @@ export const NODES: NodeContent[] = [
   { id: "scorer", kind: "engine", tone: "neutral", label: "Scoring", title: "Evidence scorer", summary: "Combine every clue into **one score per candidate** field.", icon: "sigma" },
   { id: "resolver", kind: "engine", tone: "neutral", label: "Sheet check", title: "Whole-sheet resolver", summary: "Judge the columns **as a group**, not one by one.", icon: "grid" },
   { id: "gate", kind: "gate", tone: "neutral", label: "Decision", title: "Confidence gate", summary: "Choose the **safest route** for each column.", icon: "scale" },
-  { id: "auto", kind: "route", tone: "auto", label: "Route A", title: "Map automatically", summary: "Strong, uncontested evidence — **no question** needed.", icon: "zap" },
-  { id: "ai", kind: "route", tone: "assisted", label: "Route B", title: "Ask AI for help", summary: "Semantic retrieval, then a model — looking at **only the unresolved column**.", icon: "bot" },
-  { id: "user", kind: "route", tone: "review", label: "Route C", title: "Ask the user", summary: "One focused question — the **rest of the import continues**.", icon: "user" },
+  { id: "auto", kind: "route", tone: "auto", label: "Route A", title: "Map automatically", summary: "Strong, uncontested evidence. **No question** needed.", icon: "zap" },
+  { id: "ai", kind: "route", tone: "assisted", label: "Route B", title: "Ask AI for help", summary: "Semantic retrieval, then a model, looking at **only the unresolved column**.", icon: "bot" },
+  { id: "user", kind: "route", tone: "review", label: "Route C", title: "Ask the user", summary: "One focused question. The **rest of the import continues**.", icon: "user" },
   { id: "remember", kind: "learning", tone: "auto", label: "Learning", title: "Remember the confirmation", summary: "Store the approved mapping as **seller-specific memory**.", icon: "bookmark" },
   { id: "output", kind: "output", tone: "neutral", label: "Output", title: "Clean Surpluss import", summary: "Every column now has a **consistent Surpluss meaning**.", icon: "package" },
 ];
@@ -93,7 +93,7 @@ export const DETAILS: Record<NodeId, Detail> = {
   input: {
     heading: "Every supplier file looks different",
     sections: [
-      { kind: "text", text: "Headers, layouts, abbreviations and workbook structures all vary. The engine treats each file as a fresh puzzle — until it recognises a supplier it has seen before." },
+      { kind: "text", text: "The supplier uploads inventory in their own format. The engine does not assume column order, header names or even that the first row is the header." },
       {
         kind: "example",
         title: "A typical upload",
@@ -105,13 +105,22 @@ export const DETAILS: Record<NodeId, Detail> = {
           ["GST%", "5"],
         ],
       },
-      { kind: "text", text: "There are two separate jobs. **Column mapping** answers “what does each column mean?”. **Row import** then converts and saves every row using that answer. This journey explains the first job." },
+      {
+        kind: "list",
+        title: "Two jobs stay separate",
+        items: [
+          "Column mapping: decide what each column means",
+          "Row import: convert rows only after mapping is approved",
+          "Raw supplier values stay traceable",
+        ],
+      },
     ],
   },
 
   l0: {
+    heading: "Find the real table first",
     sections: [
-      { kind: "text", text: "Before any column can be understood, the reader has to find the table. A workbook may hold a company title in the first row, blank rows, merged banners, several sheets, a summary sheet — and the actual product table starting at row 8." },
+      { kind: "text", text: "Before mapping starts, the engine finds the sheet, header row and product rows. This protects every later step from reading the wrong row as a header." },
       {
         kind: "list",
         title: "What this layer decides",
@@ -122,7 +131,7 @@ export const DETAILS: Record<NodeId, Detail> = {
         title: "What the next layers receive",
         rows: [
           ["Raw headers", "PARTICULAR · AV STK · M.R.P. · PTR · GST%"],
-          ["Sample values", "20–100 per column, spread across the sheet"],
+          ["Sample values", "20 to 100 per column, spread across the sheet"],
           ["Positions", "sheet, column index, header row"],
           ["Basic types", "text · number · date · percentage"],
         ],
@@ -133,11 +142,12 @@ export const DETAILS: Record<NodeId, Detail> = {
   },
 
   l1: {
+    heading: "Make headers comparable",
     sections: [
-      { kind: "text", text: "Normalization cleans the text without deciding what it means. Capital letters, spaces, dots, hyphens, underscores and common abbreviations are made consistent so two labels can be compared fairly." },
+      { kind: "text", text: "Normalization cleans text only. It does not map the column yet." },
       {
         kind: "example",
-        title: "Before → after",
+        title: "Before and after",
         rows: [
           ["“M.R.P.”", "mrp"],
           ["“  Available Stock ”", "available stock"],
@@ -152,8 +162,9 @@ export const DETAILS: Record<NodeId, Detail> = {
   },
 
   l2: {
+    heading: "Check approved field names",
     sections: [
-      { kind: "text", text: "The normalized header is checked against the field registry — the master list of Surpluss fields, each with the names suppliers commonly use for it." },
+      { kind: "text", text: "The field registry is the approved list of Surpluss inventory meanings. Each field has aliases, expected datatype and basic rules." },
       {
         kind: "example",
         title: "Registry entry for Available quantity",
@@ -162,34 +173,32 @@ export const DETAILS: Record<NodeId, Detail> = {
           ["Header “AV STK”", "candidate: Available quantity · evidence: exact alias"],
         ],
       },
-      { kind: "text", text: "An exact alias is strong evidence, but the values and the rest of the sheet are still checked. Some words are too broad to trust alone — **rate** could mean MRP, offer price, purchase price, tax rate or a conversion rate, so it returns several weak candidates instead of one answer." },
-      { kind: "grows", text: "When several different sellers confirm the same header → field, it is promoted into the shared alias list. A brand-new seller then benefits on their first upload." },
+      {
+        kind: "list",
+        title: "Score impact",
+        items: [
+          "Exact safe alias: usually +4",
+          "Ambiguous alias like rate: weak candidate only",
+          "Datatype mismatch later can still block it",
+        ],
+      },
+      { kind: "grows", text: "When several different sellers confirm the same header to field mapping, it can be promoted into the shared alias list. A brand-new seller then benefits on their first upload." },
     ],
   },
 
   l3: {
-    heading: "Three kinds of memory",
+    heading: "Confirmed mapping memory",
     sections: [
-      { kind: "text", text: "Before making a new decision, the engine checks what has already been confirmed. **Seller history** tells us how this seller speaks. **Global history** tells us how suppliers generally speak. **Semantic history** finds similar meanings even when the wording is new." },
+      { kind: "text", text: "This step checks confirmed imports. It uses memory only after a previous import was completed or committed." },
       { kind: "viz", name: "history" },
-      { kind: "text", text: "Seller history stays the strongest. If one supplier uses **RATE** for MRP while, globally, RATE usually means Offer price, that supplier’s own confirmed meaning wins for their files. That is why both memories exist instead of one." },
-      { kind: "text", text: "None of them blindly win, though. If a seller used **RATE** for a price last year but the column now holds percentages, memory gives way to the values." },
-      {
-        kind: "list",
-        title: "What gets stored after a confirmation",
-        items: [
-          "The decision itself — seller, raw and normalized header, confirmed field, rejected fields — kept immutable for audit",
-          "Aggregated counts per scope — global “ptr → Offer price: 82 confirmations, 4 rejections”, and the same per seller — so exact lookups are instant",
-          "A historical example with its value profile, neighbouring headers and an embedding, so future columns with similar meaning can find it",
-        ],
-      },
-      { kind: "grows", text: "Every confirmed import adds to seller memory, to the global counts, and to the pool of similar examples. Returning suppliers get quieter; new suppliers benefit from everyone before them." },
+      { kind: "why", text: "Seller history is strongest because it captures one supplier’s language. Global and semantic history help when the seller is new, but they do not decide alone." },
     ],
   },
 
   l4: {
+    heading: "Catch spelling near misses",
     sections: [
-      { kind: "text", text: "Fuzzy matching handles typos and small wording differences. It measures how similar two strings are, so a misspelt header can still find the right candidate." },
+      { kind: "text", text: "Fuzzy matching catches headers that are close to known aliases but not exact." },
       {
         kind: "example",
         title: "What it catches",
@@ -201,57 +210,85 @@ export const DETAILS: Record<NodeId, Detail> = {
       },
       {
         kind: "list",
-        title: "How we measure similarity",
+        title: "Score impact",
         items: [
-          "Jaro-Winkler for short headers — rewards matching starts of words, forgiving of a swapped or missing letter",
-          "Trigram overlap for longer headers — compares three-letter chunks, robust to word order",
-          "Both run against the alias list in memory and against this seller’s past headers in the database",
+          "Very close spelling match: usually +1",
+          "Low similarity: no points",
+          "Ambiguous word like price: creates candidates, not a decision",
         ],
       },
-      { kind: "text", text: "Fuzzy matching tells us which fields are worth considering. It does not know which one the supplier meant — **price** is textually close to MRP, offer price and purchase price all at once." },
       { kind: "grows", text: "The list it compares against grows with every promoted alias and every confirmed seller header." },
     ],
   },
 
   l5: {
+    heading: "Look at the actual values",
     sections: [
-      { kind: "text", text: "A header name can be misleading. This layer looks beneath it at representative values and asks simple questions: numbers or text? percentages? dates? mostly unique codes? currency-like amounts? whole quantities or decimal prices? a known pattern such as an EAN barcode or a GST rate?" },
+      { kind: "text", text: "A header can be vague or wrong. Value profiling checks the cells under the header." },
       {
         kind: "example",
         title: "What the values reveal",
         rows: [
           ["GST · 5, 12, 18, 18, 5", "percentage / tax"],
           ["EAN · 8901030895484, 8901491101834", "product identifier"],
-          ["Rate · 145.00, 320.50, 89.00", "a price — but which price?"],
+          ["Rate · 145.00, 320.50, 89.00", "a price, but which price?"],
         ],
       },
       { kind: "viz", name: "evidence" },
-      { kind: "why", text: "Several supporting clues are safer than trusting one similar word." },
+      {
+        kind: "list",
+        title: "Score impact",
+        items: [
+          "Values fit the candidate field: usually +2",
+          "Values are weak but possible: usually +1",
+          "Values contradict the field type: blocker, usually -4",
+        ],
+      },
       { kind: "grows", text: "The expected shape of each field is tuned on real columns, so the profiles get sharper as more inventories are imported." },
     ],
   },
 
   scorer: {
-    heading: "A judge collecting opinions from witnesses",
+    heading: "Turn clues into a score",
     sections: [
-      { kind: "text", text: "Take one column: header **PTR**, values 145, 220, 88, with an MRP column beside it. We are trying to answer one question — what does PTR mean? The possible answers are MRP, Offer price, Purchase price, or unknown." },
-      { kind: "text", text: "Each layer is a witness. A witness gives an opinion and a reason. **Evidence** is simply a reason that supports or rejects a mapping." },
+      { kind: "text", text: "The scorer takes one source column and asks: which Surpluss field is most likely?" },
+      { kind: "example", title: "Column being scored", rows: [["Header", "PTR"], ["Values", "145, 220, 88"], ["Nearby column", "MRP"], ["Candidates", "Offer price, Purchase price, MRP"]] },
+      { kind: "text", text: "Every resolver adds or subtracts points. We start with a simple baseline." },
       { kind: "viz", name: "witnesses" },
-      { kind: "text", text: "Not every witness is equally trustworthy. Confirmed seller memory is more reliable than a spelling match, so it carries more weight. Think of it as weighted votes." },
+      { kind: "text", text: "Now apply that baseline to PTR." },
       { kind: "viz", name: "votes" },
-      { kind: "text", text: "So the scorer says: **“Offer price is the best candidate.”** It has not said “we are safe to import automatically.” That is the confidence gate’s job." },
-      { kind: "viz", name: "matrix" },
-      { kind: "grows", text: "Every confirmed mapping is kept together with the evidence behind it. Periodically, that dataset is used to check which witnesses were right most often — and their weight is adjusted, offline and versioned. Not after every upload." },
+      {
+        kind: "list",
+        title: "What the scorer returns",
+        items: [
+          "Winning field: Offer price",
+          "Total score: 9",
+          "Next best score: 3",
+          "Margin: 6 points",
+          "Reason: alias, price-like values, lower than MRP, similar confirmed examples",
+        ],
+      },
+      {
+        kind: "list",
+        title: "How this moves forward",
+        items: [
+          "High total and clear margin: send to confidence gate for possible auto-map",
+          "Close scores: ask the user",
+          "Any blocker: do not auto-map",
+        ],
+      },
+      { kind: "grows", text: "The +4/+2/+1 baseline is the starting policy. Later, confirmed imports are used offline to calibrate it: evidence that often predicts correct mappings can be strengthened, and evidence that causes corrections is weakened." },
     ],
   },
 
   resolver: {
     sections: [
-      { kind: "text", text: "Columns cannot always be mapped independently. If a sheet holds MRP, PRICE and PTR, all three contain currency values — judged one at a time, all three might claim to be MRP. The resolver looks at the combination and finds the best assignment for the whole sheet." },
+      { kind: "text", text: "The scorer gives candidate scores for each column. The resolver uses those scores to choose a sheet-wide mapping that makes sense together." },
+      { kind: "example", title: "Why it comes after scoring", rows: [["Before scorer", "We only have raw columns and clues"], ["After scorer", "Every column has candidate fields with points"], ["Resolver job", "Pick the best non-conflicting combination"]] },
       { kind: "viz", name: "resolver" },
       {
         kind: "list",
-        title: "Rules it applies",
+        title: "Rules it applies after scores exist",
         items: [
           "Do not assign the same target field twice unless the field allows it",
           "MRP should generally be greater than or equal to offer price",
@@ -260,30 +297,32 @@ export const DETAILS: Record<NodeId, Detail> = {
           "Conflicting assignments reduce confidence rather than being forced",
         ],
       },
-      { kind: "note", text: "A value relationship can support a mapping — MRP ≥ offer price supports the chosen pair — but it never proves one on its own." },
+      { kind: "text", text: "We do not run the resolver before the scorer because it needs numbers to compare. Without candidate scores, it cannot know whether RATE should be MRP, Offer price, Purchase price or unknown." },
+      { kind: "note", text: "A value relationship can support a mapping. MRP ≥ offer price supports the chosen pair, but it never proves one on its own." },
       { kind: "why", text: "The engine understands columns as a group, not as isolated labels." },
     ],
   },
 
   gate: {
-    heading: "Winning is not the same as being trusted",
+    heading: "Choose the safest route",
     sections: [
-      { kind: "text", text: "The scorer answers: **which candidate is winning?** Confidence answers a different question: **do we have enough reliable evidence to trust that winner without asking?**" },
+      { kind: "text", text: "The scorer and resolver tell us the current best mapping. The gate decides what should happen next." },
+      { kind: "example", title: "Input to the gate", rows: [["Column", "PTR"], ["Winner", "Offer price"], ["Score", "+9"], ["Margin", "+6"], ["Blockers", "none from Layer 5, resolver or validation"]] },
       { kind: "viz", name: "confidence" },
-      { kind: "text", text: "Confidence is not another AI model. It is a short set of rules." },
+      { kind: "text", text: "The gate is not another AI model. It is a safety checklist." },
       {
         kind: "list",
-        title: "Map automatically only when",
+        title: "Auto-map only when",
         items: [
-          "The winner has enough support",
-          "It is clearly ahead of the second candidate",
-          "At least one reliable source supports it — an exact alias, seller memory or a strong value match",
-          "The values are compatible with the field",
-          "No business rule is broken",
-          "No other column is claiming the same field",
+          "Score is high enough",
+          "Winner is clearly ahead of the next candidate",
+          "At least one reliable source supports it",
+          "Layer 5 says values fit the selected field",
+          "Whole-sheet resolver says there is no duplicate field conflict",
+          "Validation says no business rule fails",
         ],
       },
-      { kind: "text", text: "Otherwise: suggest the mapping and ask for confirmation." },
+      { kind: "text", text: "If any check is weak, the engine does not silently import. It either asks AI for one more constrained clue, asks the user, or leaves the column unmapped." },
       { kind: "viz", name: "gate" },
       { kind: "why", text: "Uncertainty is handled openly instead of being hidden behind a confident-looking guess." },
       { kind: "grows", text: "The rules start strict and loosen only as real corrections show where automation is safe." },
@@ -291,15 +330,15 @@ export const DETAILS: Record<NodeId, Detail> = {
   },
 
   auto: {
-    heading: "Strong evidence can move forward",
+    heading: "Auto-map when it is safe",
     sections: [
-      { kind: "text", text: "When known mappings, header meaning and sample values agree — and nothing else on the sheet contradicts them — the field is mapped without interrupting the user." },
+      { kind: "text", text: "This route is used only after the gate passes. The user is not interrupted for obvious columns." },
       {
         kind: "list",
-        title: "Used when",
-        items: ["Evidence is strong", "The datatype fits", "No other column wants the same field", "The winning candidate is clearly ahead"],
+        title: "What must be true",
+        items: ["High score", "Clear margin", "Layer 5 values fit", "Resolver finds no duplicate conflict", "Validation finds no business blocker"],
       },
-      { kind: "example", title: "Example", rows: [["M.R.P.", "MRP — exact alias, valid prices, no conflict"]] },
+      { kind: "example", title: "Example", rows: [["M.R.P.", "MRP. Exact alias, valid prices, no conflict"]] },
       { kind: "note", text: "Auto-mapped columns are still shown in the one-glance summary before anything is imported." },
     ],
   },
@@ -307,18 +346,18 @@ export const DETAILS: Record<NodeId, Detail> = {
   ai: {
     heading: "AI is a fallback, not the foundation",
     sections: [
-      { kind: "text", text: "Only the unresolved column is sent for help, together with sample values and the list of approved Surpluss fields. Two steps run, the cheap one first." },
+      { kind: "text", text: "AI runs only when deterministic evidence is not enough. It does not receive the whole workbook." },
       { kind: "viz", name: "embedding" },
       { kind: "viz", name: "ai" },
       {
         kind: "list",
-        title: "Rules that keep it safe",
+        title: "How AI affects scoring",
         items: [
-          "It sees one column at a time, never the whole workbook",
-          "It can only choose from the approved fields, or answer “unknown”",
-          "Its answer is one more witness for the scorer — it does not decide",
-          "Its self-reported confidence is not our confidence",
-          "Embeddings and the model are both “meaning” systems, so together they count as one kind of evidence, not two independent proofs",
+          "Embedding retrieval creates a shortlist",
+          "The model can only choose from approved fields or unknown",
+          "AI evidence is usually +1 unless other layers agree",
+          "AI confidence is not used as our confidence",
+          "The result returns to the scorer and gate",
         ],
       },
       { kind: "grows", text: "As aliases and seller memory grow, fewer columns ever reach this route." },
@@ -328,9 +367,9 @@ export const DETAILS: Record<NodeId, Detail> = {
   user: {
     heading: "Show one useful question",
     sections: [
-      { kind: "text", text: "If the evidence is still unclear, the user sees the original header, sample values, the suggested field and a short reason — not the whole mapping table. The rest of the import continues." },
+      { kind: "text", text: "This route is used when the gate cannot safely auto-map. The user sees one focused question, not every column." },
       { kind: "viz", name: "question" },
-      { kind: "list", title: "The user can", items: ["Confirm the suggestion", "Choose another field", "Leave it unmapped"] },
+      { kind: "list", title: "What happens after the answer", items: ["Confirm: mapping can be used for this import", "Choose another: rejected candidate is recorded", "Leave unmapped: raw data is preserved in extra attributes"] },
       { kind: "why", text: "One good question beats twenty-seven dropdowns." },
     ],
   },
@@ -338,19 +377,19 @@ export const DETAILS: Record<NodeId, Detail> = {
   remember: {
     heading: "The next import gets easier",
     sections: [
-      { kind: "text", text: "Once a person confirms a meaning, that decision becomes trusted, seller-specific memory. Two very different records are kept." },
+      { kind: "text", text: "Learning happens only after a successful import. A temporary suggestion is not enough." },
       { kind: "viz", name: "storage" },
       {
         kind: "list",
         title: "Learning rules",
         items: [
-          "Auto-mapped and imported → usage count goes up",
-          "Explicitly confirmed by a person → confirmation count goes up",
-          "Corrected by a person → both the confirmed and the rejected field are stored",
-          "Import abandoned or validation failed → nothing is learned",
+          "Auto-mapped and imported: usage count goes up",
+          "Explicitly confirmed by a person: confirmation count goes up",
+          "Corrected by a person: confirmed and rejected fields are stored",
+          "Import abandoned or validation failed: nothing is learned",
         ],
       },
-      { kind: "text", text: "“Learning” means two different things here, and it helps to keep them apart." },
+      { kind: "text", text: "Learning has two levels: memory for future imports and offline calibration for scorer weights." },
       { kind: "viz", name: "learning" },
       { kind: "viz", name: "uploads" },
       { kind: "why", text: "An unconfirmed suggestion never becomes a fact." },
@@ -360,8 +399,9 @@ export const DETAILS: Record<NodeId, Detail> = {
   output: {
     heading: "Consistent data, whatever the original format",
     sections: [
-      { kind: "text", text: "The supplier’s original spreadsheet stays traceable, while its columns are translated into consistent Surpluss fields. Once the mapping is approved, the import pipeline applies it to every row." },
+      { kind: "text", text: "After mapping is approved, each supplier column has a Surpluss meaning. The row importer can now normalize and save the inventory." },
       { kind: "viz", name: "output" },
+      { kind: "note", text: "Unmapped columns are not thrown away. They stay traceable as raw source data or extra attributes." },
     ],
   },
 };

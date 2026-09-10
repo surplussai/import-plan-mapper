@@ -1,31 +1,31 @@
 const ROWS: [string, string, string][] = [
-  ["Known aliases", "Have we explicitly seen this name before?", "“I think yes.”"],
-  ["Seller history", "Has this seller confirmed it before?", "“No information.”"],
-  ["Global history", "What has this header usually meant elsewhere?", "“Usually Offer price.”"],
-  ["Fuzzy matching", "Is the spelling similar to a known name?", "“Close enough.”"],
-  ["Value profiling", "What kind of data is inside the column?", "“Definitely a price.”"],
-  ["Meaning (embedding)", "Is the overall meaning similar?", "“Looks related.”"],
-  ["Model suggestion", "Given the context, what is most likely?", "“Offer price.”"],
-  ["Business rule", "Does the mapping make sense?", "“Lower than MRP — possible.”"],
+  ["+4", "Trusted proof", "seller/template history, exact alias"],
+  ["+2", "Supporting evidence", "value profile, global history, field relation"],
+  ["+1", "Weak clue", "fuzzy match, semantic history, model suggestion"],
+  ["-2", "Suspicious", "low agreement, weak conflict, missing support"],
+  ["-4", "Blocker", "wrong datatype, duplicate field, broken rule"],
 ];
 
 export function Witnesses() {
   return (
     <div className="overflow-hidden rounded-lg border border-line">
-      <div className="grid grid-cols-[1fr_1.3fr_1fr] gap-2 border-b border-line bg-strong px-3 py-1.5 text-[11px] font-medium text-ink-2">
-        <span>Witness</span>
-        <span>The question it answers</span>
-        <span>On “PTR → Offer price”</span>
+      <div className="grid grid-cols-[3.5rem_1fr_1.4fr] gap-2 border-b border-line bg-strong px-3 py-1.5 text-[11px] font-medium text-ink-2">
+        <span>Score</span>
+        <span>Meaning</span>
+        <span>Used for</span>
       </div>
       <div className="divide-y divide-line bg-elevated">
-        {ROWS.map(([w, q, a]) => (
-          <div key={w} className="grid grid-cols-[1fr_1.3fr_1fr] gap-2 px-3 py-1.5 text-[12px]">
-            <span className="font-medium text-ink">{w}</span>
+        {ROWS.map(([score, q, a]) => (
+          <div key={score} className="grid grid-cols-[3.5rem_1fr_1.4fr] gap-2 px-3 py-1.5 text-[12px]">
+            <span className={`font-mono font-semibold ${score.startsWith("-") ? "text-[#b23b4b]" : "text-teal"}`}>{score}</span>
             <span className="text-ink-2">{q}</span>
             <span className="text-ink-3">{a}</span>
           </div>
         ))}
       </div>
+      <p className="border-t border-line bg-canvas px-3 py-2 text-[11.5px] leading-snug text-ink-3">
+        The score is evidence strength, not AI confidence. The scorer adds points per candidate, then compares totals and margin.
+      </p>
     </div>
   );
 }
