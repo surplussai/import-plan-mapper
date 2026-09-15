@@ -18,7 +18,7 @@ export function CanvasHeading({
     <div className="mb-2.5 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
       <div>
         <h2 className="font-display text-[20px] font-semibold text-ink">The mapping journey</h2>
-        <p className="text-[13px] text-ink-2">Select a step to see what it contributes, or play a scenario. No single step is trusted on its own.</p>
+        <p className="text-[13px] text-ink-2">Select a step or play a scenario. Clear columns take a short path; uncertain columns collect deeper evidence.</p>
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <div className="flex items-center gap-1.5" role="group" aria-label="Scenarios">

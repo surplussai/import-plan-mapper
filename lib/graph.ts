@@ -13,8 +13,9 @@ const POS: Record<NodeId, { x: number; y: number }> = {
   l1: { x: COL * 2, y: 0 },
   l2: { x: COL * 3, y: 0 },
   l3: { x: COL * 4, y: 0 },
-  l4: { x: COL * 5, y: 0 },
-  l5: { x: COL * 6, y: 0 },
+  router: { x: COL * 5, y: 0 },
+  l4: { x: COL * 6, y: 0 },
+  l5: { x: COL * 7, y: 0 },
   scorer: { x: 0, y: ROW },
   resolver: { x: COL, y: ROW },
   gate: { x: COL * 2, y: ROW },
@@ -62,7 +63,7 @@ interface RegionSpec {
 
 const REGIONS: RegionSpec[] = [
   { id: "r-prepare", label: "Prepare", from: "input", to: "l0" },
-  { id: "r-collect", label: "Collect evidence", from: "l1", to: "l5" },
+  { id: "r-collect", label: "Route and collect evidence", from: "l1", to: "l5" },
   { id: "r-decide", label: "Decide", from: "scorer", to: "gate" },
   { id: "r-routes", label: "", from: "auto", to: "user" },
   { id: "r-improve", label: "Improve", from: "remember", to: "output" },
@@ -122,9 +123,11 @@ export const EDGE_SPECS: EdgeSpec[] = [
   { id: "e-l0-l1", source: "l0", target: "l1", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
   { id: "e-l1-l2", source: "l1", target: "l2", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
   { id: "e-l2-l3", source: "l2", target: "l3", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
-  { id: "e-l3-l4", source: "l3", target: "l4", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
+  { id: "e-l3-router", source: "l3", target: "router", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
+  { id: "e-router-l4", source: "router", target: "l4", tone: "neutral", sourceHandle: "out", targetHandle: "in", label: "deeper evidence" },
+  { id: "e-router-scorer", source: "router", target: "scorer", tone: "auto", sourceHandle: "out-bottom", targetHandle: "in-top", dashed: true, label: "short path" },
   { id: "e-l4-l5", source: "l4", target: "l5", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
-  { id: "e-l5-scorer", source: "l5", target: "scorer", tone: "neutral", sourceHandle: "out-bottom", targetHandle: "in-top", label: "all evidence" },
+  { id: "e-l5-scorer", source: "l5", target: "scorer", tone: "neutral", sourceHandle: "out-bottom", targetHandle: "in-top", label: "collected evidence" },
   { id: "e-scorer-resolver", source: "scorer", target: "resolver", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
   { id: "e-resolver-gate", source: "resolver", target: "gate", tone: "neutral", sourceHandle: "out", targetHandle: "in" },
   { id: "e-gate-auto", source: "gate", target: "auto", tone: "auto", sourceHandle: "out", targetHandle: "in" },
@@ -138,8 +141,8 @@ export const EDGE_SPECS: EdgeSpec[] = [
 
 const EDGE_BY_PAIR = new Map(EDGE_SPECS.map((e) => [`${e.source}>${e.target}`, e.id]));
 
-const CHAIN: NodeId[] = ["input", "l0", "l1", "l2", "l3", "l4", "l5", "scorer", "resolver", "gate"];
-const CHAIN_EDGES = ["e-input-l0", "e-l0-l1", "e-l1-l2", "e-l2-l3", "e-l3-l4", "e-l4-l5", "e-l5-scorer", "e-scorer-resolver", "e-resolver-gate"];
+const CHAIN: NodeId[] = ["input", "l0", "l1", "l2", "l3", "router", "l4", "l5", "scorer", "resolver", "gate"];
+const CHAIN_EDGES = ["e-input-l0", "e-l0-l1", "e-l1-l2", "e-l2-l3", "e-l3-router", "e-router-l4", "e-l4-l5", "e-l5-scorer", "e-scorer-resolver", "e-resolver-gate"];
 
 export interface Highlight {
   nodes: Set<NodeId>;
@@ -244,6 +247,7 @@ export function journeyEdges(active: Set<string>, dimming: boolean): JourneyEdge
 
 export function neighbourhood(id: NodeId): NodeId[] {
   if (id === "scorer") return ["scorer", "resolver", "gate"];
+  if (id === "router") return ["l3", "router", "l4", "l5", "scorer"];
   if (id === "l5") return ["l4", "l5"];
   const i = CHAIN.indexOf(id);
   if (i >= 0) {

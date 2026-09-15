@@ -21,6 +21,7 @@ import { EmbeddingView } from "./viz/embedding-view";
 import { LearningTypes } from "./viz/learning-types";
 import { TwoUploads } from "./viz/two-uploads";
 import { HistoryView } from "./viz/history-view";
+import { EvidenceRouter } from "./viz/evidence-router";
 
 interface Props {
   selected: NodeId | null;
@@ -64,6 +65,8 @@ function Viz({ name }: { name: Extract<Section, { kind: "viz" }>["name"] }) {
       return <TwoUploads />;
     case "history":
       return <HistoryView />;
+    case "router":
+      return <EvidenceRouter />;
   }
 }
 

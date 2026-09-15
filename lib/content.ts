@@ -7,6 +7,7 @@ export type NodeId =
   | "l1"
   | "l2"
   | "l3"
+  | "router"
   | "l4"
   | "l5"
   | "scorer"
@@ -24,6 +25,7 @@ export type IconName =
   | "case"
   | "book"
   | "history"
+  | "route"
   | "spell"
   | "chart"
   | "sigma"
@@ -51,9 +53,10 @@ export const NODES: NodeContent[] = [
   { id: "l1", kind: "layer", tone: "auto", label: "Layer 1", title: "Normalize the header", summary: "Clean the text so labels become **comparable** before meaning is decided.", icon: "case" },
   { id: "l2", kind: "layer", tone: "auto", label: "Layer 2", title: "Known aliases", summary: "Check the header against the **field registry** of known names.", icon: "book" },
   { id: "l3", kind: "layer", tone: "auto", label: "Layer 3", title: "Confirmed history", summary: "What **this seller** confirmed, what **all suppliers** confirmed, and similar past columns.", icon: "history" },
+  { id: "router", kind: "gate", tone: "neutral", label: "Routing gate", title: "Fast evidence router", summary: "Decide whether this column needs a **short or deeper path**.", icon: "route" },
   { id: "l4", kind: "layer", tone: "auto", label: "Layer 4", title: "Fuzzy matching", summary: "Catch **typos and near-misses** in the wording.", icon: "spell" },
   { id: "l5", kind: "layer", tone: "auto", label: "Layer 5", title: "Value profiling", summary: "Look beneath the header at the **actual values**.", icon: "chart" },
-  { id: "scorer", kind: "engine", tone: "neutral", label: "Scoring", title: "Evidence scorer", summary: "Combine every clue into **one score per candidate** field.", icon: "sigma" },
+  { id: "scorer", kind: "engine", tone: "neutral", label: "Scoring", title: "Evidence scorer", summary: "Combine the clues that ran into **one score per candidate** field.", icon: "sigma" },
   { id: "resolver", kind: "engine", tone: "neutral", label: "Sheet check", title: "Whole-sheet resolver", summary: "Judge the columns **as a group**, not one by one.", icon: "grid" },
   { id: "gate", kind: "gate", tone: "neutral", label: "Decision", title: "Confidence gate", summary: "Choose the **safest route** for each column.", icon: "scale" },
   { id: "auto", kind: "route", tone: "auto", label: "Route A", title: "Map automatically", summary: "Strong, uncontested evidence. **No question** needed.", icon: "zap" },
@@ -66,7 +69,7 @@ export const NODES: NodeContent[] = [
 export const NODE_BY_ID = Object.fromEntries(NODES.map((n) => [n.id, n])) as Record<NodeId, NodeContent>;
 
 /** Order used by Previous / Next, the arrow keys and the walkthrough. */
-export const SEQUENCE: NodeId[] = ["l0", "l1", "l2", "l3", "l4", "l5", "scorer", "resolver", "gate", "auto", "ai", "user", "remember", "output"];
+export const SEQUENCE: NodeId[] = ["l0", "l1", "l2", "l3", "router", "l4", "l5", "scorer", "resolver", "gate", "auto", "ai", "user", "remember", "output"];
 
 export function progressLabel(id: NodeId): string {
   const i = SEQUENCE.indexOf(id);
@@ -82,7 +85,7 @@ export type Section =
   | { kind: "why"; text: string }
   | { kind: "grows"; text: string }
   | { kind: "note"; text: string }
-  | { kind: "viz"; name: "evidence" | "matrix" | "resolver" | "gate" | "ai" | "storage" | "output" | "question" | "witnesses" | "votes" | "confidence" | "embedding" | "learning" | "uploads" | "history" };
+  | { kind: "viz"; name: "evidence" | "matrix" | "resolver" | "gate" | "ai" | "storage" | "output" | "question" | "witnesses" | "votes" | "confidence" | "embedding" | "learning" | "uploads" | "history" | "router" };
 
 export interface Detail {
   heading?: string;
@@ -195,6 +198,14 @@ export const DETAILS: Record<NodeId, Detail> = {
     ],
   },
 
+  router: {
+    heading: "Spend effort only where it is needed",
+    sections: [
+      { kind: "viz", name: "router" },
+      { kind: "why", text: "Clear columns stay fast. Ambiguous columns receive deeper reasoning. Unknown columns are preserved instead of being forced into the schema." },
+    ],
+  },
+
   l4: {
     heading: "Catch spelling near misses",
     sections: [
@@ -253,7 +264,7 @@ export const DETAILS: Record<NodeId, Detail> = {
     sections: [
       { kind: "text", text: "The scorer takes one source column and asks: which Surpluss field is most likely?" },
       { kind: "example", title: "Column being scored", rows: [["Header", "PTR"], ["Values", "145, 220, 88"], ["Nearby column", "MRP"], ["Candidates", "Offer price, Purchase price, MRP"]] },
-      { kind: "text", text: "Every resolver adds or subtracts points. We start with a simple baseline." },
+      { kind: "text", text: "Each evidence source that the router unlocked adds or subtracts points. We start with a simple baseline." },
       { kind: "viz", name: "witnesses" },
       { kind: "text", text: "Now apply that baseline to PTR." },
       { kind: "viz", name: "votes" },
